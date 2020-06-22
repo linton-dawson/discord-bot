@@ -4,6 +4,8 @@ import random
 import os
 from dotenv import load_dotenv
 import tmdbv3api 
+import io
+import aiohttp
 
 load_dotenv()
 
@@ -100,6 +102,18 @@ async def on_message(msg) :
             else :
                 await msg.channel.send(search[0].title + ' has popularity of ' + str(100 - movie.details(search[0].id).popularity) + '%')
 
+
+        if 'poster' in userip :
+            baseURL = 'https://image.tmdb.org/t/p/w500'
+            movie_name = userip[userip.index('poster') + 7 :]
+            search = movie.search(movie_name)
+            search[0].poster_path = baseURL + search[0].poster_path
+            async with aiohttp.ClientSession() as session :
+                async with session.get(search[0].poster_path) as resp :
+                    if resp.status != 200 :
+                        return await msg.channel.send('Poster nahi mila, sorry.')
+                    data = io.BytesIO(await resp.read())
+                    await msg.channel.send(file = discord.File(data,'cool_img.png'))
 
         #send love
         if 'gib-pyaar' in userip :

@@ -11,3 +11,7 @@ tmdbv3api
 python-dotenv
 
 regex
+
+io
+
+aiohttp
