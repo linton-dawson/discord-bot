@@ -72,7 +72,7 @@ async def on_message(msg) :
                 await msg.channel.send('KYA TUTUL PUTUL')
 
 
-        #get details of a person
+        #get details of a celebrity 
         if 'whois' in userip :
             person_name = userip[userip.index('whois') + 6 :]
             search_res = person.search(person_name,1)
@@ -89,7 +89,7 @@ async def on_message(msg) :
                     await msg.channel.send('Mereko nahi pata')
 
 
-        #get ratings of a movie
+        #get popularity of a movie
         if 'howis' in userip :
             movie_name = userip[userip.index('howis') + 6 :]
             search = movie.search(movie_name)
@@ -103,6 +103,7 @@ async def on_message(msg) :
                 await msg.channel.send(search[0].title + ' has popularity of ' + str(100 - movie.details(search[0].id).popularity) + '%')
 
 
+        #display movie poster
         if 'poster' in userip :
             baseURL = 'https://image.tmdb.org/t/p/w500'
             movie_name = userip[userip.index('poster') + 7 :]
