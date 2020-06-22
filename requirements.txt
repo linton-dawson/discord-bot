@@ -9,3 +9,5 @@ discord
 tmdbv3api
 
 python-dotenv
+
+regex
