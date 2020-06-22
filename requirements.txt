@@ -8,4 +8,4 @@ discord
 
 tmdbv3api
 
-dotenv
+python-dotenv
