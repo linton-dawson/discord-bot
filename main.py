@@ -98,7 +98,7 @@ async def on_message(msg) :
             elif len(search) == 0 :
                 await msg.channel.send('Chutiya mat bana bhendi.')
             else :
-                await msg.channel.send(search[0].title + ' has rating of ' + str(100 - movie.details(search[0].id).popularity) + '%')
+                await msg.channel.send(search[0].title + ' has popularity of ' + str(100 - movie.details(search[0].id).popularity) + '%')
 
 
         #send love
