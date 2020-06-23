@@ -90,10 +90,10 @@ async def on_message(msg) :
 
 
         #get popularity of a movie
-        if 'howis' in userip :
+        elif 'howis' in userip :
             movie_name = userip[userip.index('howis') + 6 :]
             search = movie.search(movie_name)
-            if len(search) > 1  and movie_name != search[0].title :
+            if len(search) > 1  and movie_name.lower() != search[0].title.lower() :
                 await msg.channel.send('Specify the movie dumdum. Type again with the correct name')
                 for res in search :
                     await msg.channel.send(res.title)
@@ -104,7 +104,7 @@ async def on_message(msg) :
 
 
         #display movie poster
-        if 'poster' in userip :
+        elif 'poster' in userip :
             baseURL = 'https://image.tmdb.org/t/p/w500'
             movie_name = userip[userip.index('poster') + 7 :]
             search = movie.search(movie_name)
@@ -116,8 +116,15 @@ async def on_message(msg) :
                     data = io.BytesIO(await resp.read())
                     await msg.channel.send(file = discord.File(data,'cool_img.png'))
 
+        #display popular movies
+        elif 'popular' in userip :
+            popular = movie.popular()
+            await msg.channel.send('**POPULAR MOVIES**')
+            for mov in popular :
+                await msg.channel.send(mov.title)
+
         #send love
-        if 'gib-pyaar' in userip :
+        elif 'gib-pyaar' in userip :
             msg1 = 'Hey ' + msg.mentions[0].mention.format(msg) + '. I love you <3'
             await msg.channel.send(msg1)
 
