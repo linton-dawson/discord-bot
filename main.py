@@ -15,7 +15,6 @@ client = discord.Client()
 movie = tmdbv3api.Movie()
 person = tmdbv3api.Person()
 
-
 #below regex formatting function taken from https://stackoverflow.com/a/38832133. Trims the biography# to one sentence
 def format_string(input_string):
     keywords = set(['Mr.', 'Mrs.', 'Ms.', 'Dr.', 'Prof.', 'Rev.', 'Capt.', 'Lt.-Col.', 
