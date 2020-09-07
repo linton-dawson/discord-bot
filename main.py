@@ -147,4 +147,7 @@ async def on_message(msg) :
             msg1 = 'Hey ' + msg.mentions[0].mention.format(msg) + '. I love you <3'
             await msg.channel.send(msg1)
 
+        #help
+        elif 'help' in userip :
+            await msg.channel.send("Help Docs under construction")
 client.run(DISC_TOKEN)
