@@ -1,11 +1,16 @@
-import regex as re
+#Third party imports
 import discord
+import tmdbv3api 
+import rarbgapi
+
+#Sys imports
+import regex as re
 import random
 import os
 from dotenv import load_dotenv
-import tmdbv3api 
 import io
 import aiohttp
+import requests
 
 load_dotenv()
 
@@ -14,6 +19,17 @@ TMDB_TOKEN = os.getenv('TMDB_API_KEY')
 client = discord.Client()
 movie = tmdbv3api.Movie()
 person = tmdbv3api.Person()
+rbapi = rarbgapi.RarbgAPI()
+
+
+def getID(title) :
+    title = title.lower()
+#    print(title)
+    try :
+        tmp = rbapi.search(search_string = title)
+        return tmp[0].download
+    except :
+        return "Iska magnet link nahi mila sorry :("
 
 #below regex formatting function taken from https://stackoverflow.com/a/38832133. Trims the biography# to one sentence
 def format_string(input_string):
@@ -61,14 +77,18 @@ async def on_message(msg) :
             try:
                 recommend = movie.similar(movie_id = mov_id)
                 if recommend :
-                    await msg.channel.send('__PEHLE 10 ICH DIKHAARA__')
+                    await msg.channel.send('__PEHLE 10 ICH DIKHAATA__')
                     for r in range(0,min(len(recommend),10)) :
                         title = '**' + recommend[r].title + '**'
+                        rel_date = recommend[r].release_date
+                        rel_date = rel_date[:4]
+                        title += '\n'
+                        title += getID(recommend[r].title + ' ' + rel_date)
                         await msg.channel.send(title)
                 else :
-                    await msg.channel.send('Bahut unique movie hai ye.')
+                    await msg.channel.send('KYA TUTUL PUTUL ! Acchese type kar...')
             except :
-                await msg.channel.send('KYA TUTUL PUTUL')
+                await msg.channel.send('Kuch to bhi locha ho gaya')
 
 
         #get details of a celebrity 

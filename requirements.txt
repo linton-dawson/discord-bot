@@ -8,6 +8,8 @@ discord.py==1.4.1
 
 tmdbv3api
 
+rarbgapi
+
 python-dotenv
 
 regex
