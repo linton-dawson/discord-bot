@@ -63,7 +63,7 @@ async def on_message(msg) :
         return
 
 #calling name (bhendi)
-    if msg.content.startswith('bhendi'):
+    if msg.content.startswith('bhendi' or 'Bhendi'):
         userip = msg.content
 
         #movie recommendation
