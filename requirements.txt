@@ -15,3 +15,5 @@ python-dotenv
 regex
 
 aiohttp
+
+rotten_tomatoes_client

@@ -2,8 +2,9 @@
 import discord
 import tmdbv3api 
 import rarbgapi
+from rotten_tomatoes_client import RottenTomatoesClient
 
-#Sys imports
+#sys imports
 import regex as re
 import random
 import os
@@ -16,20 +17,35 @@ load_dotenv()
 
 DISC_TOKEN = os.getenv('DISCORD_TOKEN')
 TMDB_TOKEN = os.getenv('TMDB_API_KEY')
+
+#API instantiation
 client = discord.Client()
 movie = tmdbv3api.Movie()
 person = tmdbv3api.Person()
 rbapi = rarbgapi.RarbgAPI()
 
+#magnet link shortener url for post method
+mgnet = "http://mgnet.me/api/create"
 
+#function which gets the magnet link from rarbg and shortens it using mgnet.me api
 def getID(title) :
     title = title.lower()
-#    print(title)
+
     try :
         tmp = rbapi.search(search_string = title)
-        return tmp[0].download
+        maglink = tmp[0].download
+        link = requests.post(mgnet,params={'m' : maglink, 'format' : 'text'})
+        return link.text
     except :
         return "Iska magnet link nahi mila sorry :("
+
+
+#function which structures the message to be send and gets the shortened magnet link
+def to_send(title,rel_date) :
+    rel_date = rel_date[:4]
+    final_title = getID(title + ' ' + rel_date)
+    return final_title
+
 
 #below regex formatting function taken from https://stackoverflow.com/a/38832133. Trims the biography# to one sentence
 def format_string(input_string):
@@ -63,7 +79,7 @@ async def on_message(msg) :
         return
 
 #calling name (bhendi)
-    if msg.content.startswith('bhendi' or 'Bhendi'):
+    if msg.content.startswith('bhendi') or msg.content.startswith('Bhendi'):
         userip = msg.content
 
         #movie recommendation
@@ -79,11 +95,8 @@ async def on_message(msg) :
                 if recommend :
                     await msg.channel.send('__PEHLE 10 ICH DIKHAATA__')
                     for r in range(0,min(len(recommend),10)) :
-                        title = '**' + recommend[r].title + '**'
-                        rel_date = recommend[r].release_date
-                        rel_date = rel_date[:4]
-                        title += '\n'
-                        title += getID(recommend[r].title + ' ' + rel_date)
+                        title = '**' + recommend[r].title + '**\n'
+                        title += to_send(recommend[r].title,recommend[r].release_date)
                         await msg.channel.send(title)
                 else :
                     await msg.channel.send('KYA TUTUL PUTUL ! Acchese type kar...')
@@ -109,21 +122,25 @@ async def on_message(msg) :
 
 
         #get popularity of a movie
-        elif 'howis' in userip :
+        if 'howis' in userip :
             movie_name = userip[userip.index('howis') + 6 :]
-            search = movie.search(movie_name)
-            if len(search) > 1  and movie_name.lower() != search[0].title.lower() :
-                await msg.channel.send('Specify the movie dumdum. Type again with the correct name')
-                for res in search :
-                    await msg.channel.send(res.title)
-            elif len(search) == 0 :
-                await msg.channel.send('Chutiya mat bana bhendi.')
-            else :
-                await msg.channel.send(search[0].title + ' has popularity of ' + str(100 - movie.details(search[0].id).popularity) + '%')
+            try :
+                movie_raw = RottenTomatoesClient.search(term =movie_name,limit = 1)
+                movie_json = movie_raw['movies']
+                movie_detail = movie_json[0]
+                final_detail = 'Release year: ' + str(movie_detail['year'])
+                cast = movie_detail['subline']
+                cast = cast[:-1]
+                final_detail += '\nStarring: ' + cast
+                final_detail += '\nMeter Class: ' + movie_detail['meterClass'] + '\nMeter Score: ' + str(movie_detail['meterScore'])
+                print(final_detail)
+                await msg.channel.send(final_detail)
+            except :
+                await msg.channel.send("Pehle mereko yeh samjha ki ... isko samjhana kya hai. Type kar firse kutrya !")
 
 
         #display movie poster
-        elif 'poster' in userip :
+        if 'poster' in userip :
             baseURL = 'https://image.tmdb.org/t/p/w500'
             movie_name = userip[userip.index('poster') + 7 :]
             search = movie.search(movie_name)
@@ -136,18 +153,29 @@ async def on_message(msg) :
                     await msg.channel.send(file = discord.File(data,'cool_img.png'))
 
         #display popular movies
-        elif 'popular' in userip :
+        if 'popular' in userip :
             popular = movie.popular()
             await msg.channel.send('**POPULAR MOVIES**')
             for mov in popular :
-                await msg.channel.send(mov.title)
+                title = mov.title + '\n'
+                title += to_send(mov.title,mov.release_date)
+                await msg.channel.send(title)
+        
+
+        if 'magnet' in userip :
+            movie_name = userip[userip.index('magnet') + 7 :]
+            search = movie.search(movie_name)
+            movie_magnet = search[0].title + '\n'
+            movie_magnet += to_send(search[0].title,search[0].release_date)
+            await msg.channel.send(movie_magnet)
+
 
         #send love
-        elif 'gib-pyaar' in userip :
+        if 'gib-pyaar' in userip :
             msg1 = 'Hey ' + msg.mentions[0].mention.format(msg) + '. I love you <3'
             await msg.channel.send(msg1)
 
         #help
-        elif 'help' in userip :
+        if 'help' in userip :
             await msg.channel.send("Help Docs under construction")
 client.run(DISC_TOKEN)
