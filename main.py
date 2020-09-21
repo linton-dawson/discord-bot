@@ -3,6 +3,7 @@ import discord
 import tmdbv3api 
 import rarbgapi
 from rotten_tomatoes_client import RottenTomatoesClient
+import chessdotcom 
 
 #sys imports
 import regex as re
@@ -12,6 +13,7 @@ from dotenv import load_dotenv
 import io
 import aiohttp
 import requests
+import string
 
 load_dotenv()
 
@@ -29,8 +31,22 @@ mgnet = "http://mgnet.me/api/create"
 
 #function which gets the magnet link from rarbg and shortens it using mgnet.me api
 def getID(title) :
-    title = title.lower()
-
+    tmp = title
+    title = ''
+    for i in tmp:
+        if i in string.punctuation :
+            continue
+        title += i
+    tmp = title
+    title = ''
+    for i in tmp :
+        if i == ' ':
+            if title.endswith('.') :
+                continue
+            title += '.'
+        else :
+            title += i
+#    print(title)
     try :
         tmp = rbapi.search(search_string = title)
         maglink = tmp[0].download
@@ -161,7 +177,7 @@ async def on_message(msg) :
                 title += to_send(mov.title,mov.release_date)
                 await msg.channel.send(title)
         
-
+        #get magnet links
         if 'magnet' in userip :
             movie_name = userip[userip.index('magnet') + 7 :]
             search = movie.search(movie_name)
@@ -174,6 +190,29 @@ async def on_message(msg) :
         if 'gib-pyaar' in userip :
             msg1 = 'Hey ' + msg.mentions[0].mention.format(msg) + '. I love you <3'
             await msg.channel.send(msg1)
+       
+
+        #chess get ratings and record 
+        if 'chess' in userip :
+            player_name = userip[userip.index('chess') + 6 :]
+            try :
+                player_data = chessdotcom.get_player_stats(player_name)
+                send_string = 'chess.com details for **' + player_name + '** :-\n'
+                keylist = list(player_data.keys())
+                for key in keylist :
+                    if key == "fide" :
+                        break
+                    game_type = key
+                    tmp = game_type
+                    game_type = game_type.replace('_',' ')
+                    game_type = game_type.capitalize()
+                    recent = player_data[key]
+                    ans = recent['last']['rating']
+                    trec = recent['record']
+                    send_string += '__' + game_type + '__ : ' + str(ans) + ' (' + str(trec['win']) + 'W--' + str(trec['loss']) + 'L--' + str(trec['draw']) + 'D)\n'
+                await msg.channel.send(send_string)
+            except :
+                await msg.channel.send("Username as absent as Fischer in Game 2...")
 
         #help
         if 'help' in userip :

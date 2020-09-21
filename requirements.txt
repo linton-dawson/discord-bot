@@ -17,3 +17,5 @@ regex
 aiohttp
 
 rotten_tomatoes_client
+
+chess.com
