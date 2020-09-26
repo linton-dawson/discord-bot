@@ -14,6 +14,8 @@ import io
 import aiohttp
 import requests
 import string
+import asyncio
+import html
 
 load_dotenv()
 
@@ -82,6 +84,7 @@ def format_string(input_string):
     return ''.join(newly_joined).strip()
 
 
+
 #console notif for the user
 @client.event
 async def on_ready():
@@ -95,9 +98,10 @@ async def on_message(msg) :
         return
 
 #calling name (bhendi)
-    if msg.content.startswith('bhendi') or msg.content.startswith('Bhendi'):
-        userip = msg.content
+    if msg.content.startswith('bhendi') or msg.content.startswith('Bhendi') or msg.content.startswith('bdb') or msg.content.startswith('Bdb') :
 
+        userip = msg.content
+        
         #movie recommendation
         if 'rec' in userip :
             movie_name = userip[userip.index('rec') + 4 :]
@@ -213,8 +217,101 @@ async def on_message(msg) :
                 await msg.channel.send(send_string)
             except :
                 await msg.channel.send("Username as absent as Fischer in Game 2...")
+       
+
+        #ugly var declaration to check author. will fix later
+        auth = ''
+
+        def chkfunc(m) :
+            authid = m.author.id
+            authid = '<@!' + str(authid) + '>'
+            return authid == auth and m.channel == msg.channel
+
+        def getscard(scorecard,unames) :
+
+            sboard = discord.Embed(title="BhendiBot's Trivia Scorecard",description = "Look who's winnin :heart:",color=0x808080)
+            ranknames = ''
+            scr = ''
+            rank = 1
+            for name in scorecard :
+                ranknames += str(rank) + '. ' + unames[name] + '\n'
+                scr += str(scorecard[name]) + '\n'
+                rank += 1
+            sboard.add_field(name="Naam",value=ranknames)
+            sboard.add_field(name="Score",value=scr)
+            return sboard
+
+
+        #trivia setup
+        if 'trivia' in userip :
+            data = ''
+            skeys = []
+            options = []
+            corrans = {}
+            ca = ''
+            scorecard = {}
+            unames = {}
+            alp = ['A','B','C','D']
+
+            with open("trivia_rules.txt","r") as rls :
+                data += rls.read()
+            await msg.channel.send(data)
+            await asyncio.sleep(8)
+            await msg.channel.send(">>> Padh liye rules ? Let's jump right into it !")
+
+            for member in msg.mentions :
+                unames[member.mention.format(msg)] = member.display_name
+                scorecard[member.mention.format(msg)] = 0
+            skeys = list(scorecard.keys())
+            tokenURL = 'https://opentdb.com/api_token.php?command=request'
+            trivia_obj = requests.get(tokenURL)
+            trivia_json = trivia_obj.json()
+            token = trivia_json['token']
+            trivia_amt = "https://opentdb.com/api.php?amount="
+            quiz_session = requests.get(trivia_amt + str(5*len(scorecard)) + '&token=' + token)
+            session_json = quiz_session.json()
+            for i in range(0,5*len(scorecard)) :
+                qs_json = session_json['results'][i]
+                auth = skeys[i%len(scorecard)]
+                toask = ':arrow_forward: **Question ' + str(i//len(scorecard) + 1) + '** for ' + str(skeys[i%len(scorecard)]) + '\n```\n'
+                toask += qs_json['question'] + '\n'
+                options = qs_json['incorrect_answers']
+                ca = qs_json['correct_answer']
+                ca = html.unescape(ca)
+                options.append(ca)
+                random.shuffle(options)
+                for j in range(0,len(options)) :
+                    toask += alp[j] + ') ' + options[j] + '\n'
+                    corrans[alp[j].lower()] = options[j]
+                toask += '```\n'
+                toask = html.unescape(toask)
+                toask += '*You have 13 seconds to answer  :gun:*'
+                await msg.channel.send(toask)
+                try :
+                    answer = await client.wait_for('message',check=chkfunc,timeout = 13)
+                except asyncio.TimeoutError :
+                    await msg.channel.send('*Time\'s up !*')
+                    await asyncio.sleep(3)
+                else :
+                    seln = answer.content
+                    seln = seln[-1]
+                    try :
+                        if corrans[seln.lower()] == ca :
+                            await msg.channel.send('**SAHI JAWAAB ! :clap: **')
+                            key = '<@!' + str(answer.author.id) + '>'
+                            scorecard[key] += 3
+                        else :
+                            await msg.channel.send('Hagg dia ! Correct answer was **' + ca + '**')
+                    except :
+                        await msg.channel.send('Achese options select kar bc')
+                await asyncio.sleep(2)            
+            {tmp : v for tmp, v in sorted(scorecard.items(),key=lambda item : item[1])}
+            embscard = getscard(scorecard,unames)
+            await msg.channel.send(embed=embscard)
+            
 
         #help
         if 'help' in userip :
             await msg.channel.send("Help Docs under construction")
+
 client.run(DISC_TOKEN)

@@ -1,0 +1,11 @@
+```
+Mere pyaare serverwaasiyo, rules suno :
+
+1. Each player will be asked 5 questions
+
+2. Each question has 3 points
+
+3. Type your answers as "bdb <option_alphabet>" or "bhendi <option_alphabet>"
+
+4. Person with most points wins and gets superficial e-validation.
+```
